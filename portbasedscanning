@@ -1,0 +1,33 @@
+import socket
+import subprocess
+import os
+
+host = input("Enter the IP address to scan: ")
+port_list = [80, 443]
+
+def check_port(host, port):
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    s.settimeout(5)
+    try:
+        con = s.connect((host, port))
+        return True
+    except:
+        return False
+
+def run_nikto(host, port):
+    os.system(f"nikto -h http://{host}:{port}")
+
+def run_wfuzz(host, port):
+    os.system(f"wfuzz -c -z file,/usr/share/wfuzz/wordlist/general/common.txt --hc 404 http://{host}:{port}/FUZZ")
+
+def run_sqlmap(host, port):
+    os.system(f"sqlmap -u http://{host}:{port} --dbs")
+
+for port in port_list:
+    if check_port(host, port):
+        print(f"Port {port} is open")
+        run_nikto(host, port)
+        run_wfuzz(host, port)
+        run_sqlmap(host, port)
+    else:
+        print(f"Port {port} is closed")
