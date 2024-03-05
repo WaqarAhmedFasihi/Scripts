@@ -1,0 +1,100 @@
+import requests
+
+# Define your API endpoint
+api_url = 'http://your-api-url.com/'
+
+# Define a function to test for each vulnerability
+def test_injection():
+    # SQL Injection
+    payload = {"username": "' OR '1'='1'", "password": "anything"}
+    response = requests.post(api_url + 'login', json=payload)
+    if 'Login successful' in response.text:
+        print("SQL Injection vulnerability found")
+    else:
+        print("No SQL Injection vulnerability")
+
+def test_auth():
+    # Insecure Authentication
+    response = requests.get(api_url + 'admin', auth=('admin', 'password'))
+    if response.status_code == 200:
+        print("Insecure Authentication vulnerability found")
+    else:
+        print("No Insecure Authentication vulnerability")
+
+def test_exposure():
+    # Information Exposure
+    response = requests.get(api_url + 'user/1')
+    if response.status_code == 200 and 'user_id' in response.json():
+        print("Information Exposure vulnerability found")
+    else:
+        print("No Information Exposure vulnerability")
+
+def test_broken_auth():
+    # Broken Authentication
+    response = requests.get(api_url + 'admin', auth=('admin', 'wrong_password'))
+    if response.status_code == 401:
+        print("Broken Authentication vulnerability found")
+    else:
+        print("No Broken Authentication vulnerability")
+
+def test_sensitive_data_exposure():
+    # Sensitive Data Exposure
+    response = requests.get(api_url + 'user/1')
+    if response.status_code == 200 and 'password' in response.json():
+        print("Sensitive Data Exposure vulnerability found")
+    else:
+        print("No Sensitive Data Exposure vulnerability")
+
+def test_lack_of_resources():
+    # Lack of Resources & Rate Limiting
+    for i in range(100):
+        response = requests.get(api_url + 'user/1')
+    if response.status_code == 429:
+        print("Lack of Resources & Rate Limiting vulnerability found")
+    else:
+        print("No Lack of Resources & Rate Limiting vulnerability")
+
+def test_data_validation():
+    # Lack of Data Validation
+    payload = {"username": "admin", "password": "anything"}
+    response = requests.post(api_url + 'login', json=payload)
+    if response.status_code == 200 and 'user_id' in response.json():
+        print("Lack of Data Validation vulnerability found")
+    else:
+        print("No Lack of Data Validation vulnerability")
+
+def test_implementation():
+    # Security Misconfiguration
+    response = requests.get(api_url + 'config')
+    if response.status_code == 200 and 'debug' in response.json() and response.json()['debug']:
+        print("Security Misconfiguration vulnerability found")
+    else:
+        print("No Security Misconfiguration vulnerability")
+
+def test_insecure_transport():
+    # Insecure Data Transmission
+    response = requests.get(api_url, verify=False)
+    if response.status_code == 200:
+        print("Insecure Data Transmission vulnerability found")
+    else:
+        print("No Insecure Data Transmission vulnerability")
+
+def test_poor_logging():
+    # Insufficient Logging & Monitoring
+    response = requests.get(api_url + 'admin', auth=('admin', 'password'))
+    if response.status_code == 200:
+        print("Insufficient Logging & Monitoring vulnerability found")
+    else:
+        print("No Insufficient Logging & Monitoring vulnerability")
+
+# Run the tests
+test_injection()
+test_auth()
+test_exposure()
+test_broken_auth()
+test_sensitive_data_exposure()
+test_lack_of_resources()
+test_data_validation()
+test_implementation()
+test_insecure_transport()
+test_poor_logging()
